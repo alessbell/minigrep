@@ -1,23 +1,19 @@
-use std::env;
-use std::process;
+#![feature(decl_macro)]
+#![feature(proc_macro_hygiene)]
+// https://rocket.rs/v0.4/guide/requests/#optional-parameters
+extern crate env_logger;
+// #[macro_use] extern crate log;
+#[macro_use] extern crate rocket;
+use rocket::http::RawStr;
+// use url::Url;
 
-use minigrep;
-// use minigrep::Config;
+#[get("/?<board>")]
+fn hello(board: Option<&RawStr>) -> String {
+    println!("{:?}", board);
+    board.map(|board| format!("Hi, {:?}!", board))
+        .unwrap_or_else(|| "Hello!".into())
+}
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    let config = minigrep::Config::new(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arguments: {}", err);
-        process::exit(1);
-    });
-
-    println!("Query is: {}", config.query);
-    println!("Filename is: {}", config.filename);
-
-    if let Err(e) = minigrep::run(config) {
-        println!("Application error: {}", e);
-
-        process::exit(1);
-    }
+    rocket::ignite().mount("/", routes![hello]).launch();
 }
